@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo, memo } from 'react'
+import { useAuth } from './context/AuthContext'
+import { AuthModal } from './components/AuthModal'
 
 // API
 const API_BASE_URL = 'https://0kadddxyh3.execute-api.us-east-1.amazonaws.com'
@@ -192,6 +194,10 @@ const LoadingSkeleton = memo(() => (
 LoadingSkeleton.displayName = 'LoadingSkeleton'
 
 function App() {
+  // Auth
+  const { user, loading: authLoading, cloudFavorites, addToCloudFavorites, removeFromCloudFavorites, isMovieInCloudFavorites, logout } = useAuth()
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  
   // State
   const [token, setToken] = useState<string | null>(null)
   const [movies, setMovies] = useState<Movie[]>([])
@@ -205,8 +211,14 @@ function App() {
   const [totalResults, setTotalResults] = useState(0)
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null)
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
-  const [favorites, setFavorites] = useState<string[]>(getFavorites)
+  const [localFavorites, setLocalFavorites] = useState<string[]>(getFavorites)
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+  
+  // Computed: Use cloud favorites when logged in, local otherwise
+  const favorites = useMemo(() => 
+    user ? cloudFavorites.map(f => f.movieId) : localFavorites,
+    [user, cloudFavorites, localFavorites]
+  )
   
   // Chatbot state
   const [chatOpen, setChatOpen] = useState(false)
@@ -248,14 +260,28 @@ function App() {
   // Callbacks
   const toggleFavorite = useCallback((movieId: string, e?: React.MouseEvent) => {
     e?.stopPropagation()
-    setFavorites(prev => {
-      const newFavs = prev.includes(movieId) 
-        ? prev.filter(id => id !== movieId)
-        : [...prev, movieId]
-      saveFavorites(newFavs)
-      return newFavs
-    })
-  }, [])
+    
+    // If logged in, use cloud favorites
+    if (user) {
+      if (isMovieInCloudFavorites(movieId)) {
+        removeFromCloudFavorites(movieId)
+      } else {
+        const movie = movies.find(m => m.id === movieId)
+        if (movie) {
+          addToCloudFavorites(movieId, movie.title, movie.posterUrl, movie.rating ? parseFloat(movie.rating) : undefined)
+        }
+      }
+    } else {
+      // Guest mode: use local storage
+      setLocalFavorites(prev => {
+        const newFavs = prev.includes(movieId) 
+          ? prev.filter(id => id !== movieId)
+          : [...prev, movieId]
+        saveFavorites(newFavs)
+        return newFavs
+      })
+    }
+  }, [user, movies, isMovieInCloudFavorites, addToCloudFavorites, removeFromCloudFavorites])
 
   const watchTrailer = useCallback((movie: Movie) => {
     const url = getTrailerUrl(movie.title, getMovieYear(movie))
@@ -612,6 +638,45 @@ Give a brief, friendly response (1-2 sentences). If they want movies, suggest th
                 )}
               </button>
 
+              {/* Auth Button */}
+              {!authLoading && (
+                user ? (
+                  <div className="relative group">
+                    <button className="flex items-center gap-2 px-3 py-2.5 bg-white/5 hover:bg-white/10 rounded-xl text-sm font-medium border border-white/10 transition-all">
+                      <div className="w-6 h-6 rounded-full bg-linear-to-br from-red-500 to-orange-500 flex items-center justify-center text-xs font-bold">
+                        {user.name?.charAt(0).toUpperCase() || user.email.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="hidden sm:inline text-zinc-300 max-w-[100px] truncate">{user.name || user.email}</span>
+                    </button>
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-900 border border-white/10 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                      <div className="p-3 border-b border-white/10">
+                        <p className="text-sm font-medium text-white truncate">{user.name}</p>
+                        <p className="text-xs text-zinc-500 truncate">{user.email}</p>
+                      </div>
+                      <div className="p-2">
+                        <p className="px-2 py-1 text-xs text-zinc-500">{cloudFavorites.length} saved favorites</p>
+                        <button
+                          onClick={logout}
+                          className="w-full mt-1 px-3 py-2 text-left text-sm text-red-400 hover:bg-white/5 rounded-lg transition"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setAuthModalOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-2.5 bg-red-500 hover:bg-red-600 rounded-xl text-sm font-medium transition-all"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    <span className="hidden sm:inline">Sign In</span>
+                  </button>
+                )
+              )}
+
               {!loading && totalResults > 0 && !showFavoritesOnly && (
                 <div className="hidden lg:block text-sm text-zinc-400 pl-2 border-l border-white/10">
                   <span className="text-white font-medium">{totalResults.toLocaleString()}</span> movies
@@ -673,12 +738,35 @@ Give a brief, friendly response (1-2 sentences). If they want movies, suggest th
       <main className="max-w-7xl mx-auto px-4 py-6">
         {showFavoritesOnly && (
           <div className="mb-6">
-            <h2 className="text-xl font-semibold">My Favorites</h2>
-            <p className="text-sm text-zinc-500 mt-1">
-              {favorites.length === 0 
-                ? 'No favorites yet. Click the heart on movies to add them!'
-                : `${displayMovies.length} of ${favorites.length} favorites shown`}
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">My Favorites</h2>
+                <p className="text-sm text-zinc-500 mt-1">
+                  {favorites.length === 0 
+                    ? 'No favorites yet. Click the heart on movies to add them!'
+                    : `${displayMovies.length} of ${favorites.length} favorites shown`}
+                </p>
+              </div>
+              {!user && favorites.length > 0 && (
+                <button
+                  onClick={() => setAuthModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-red-500 to-orange-500 rounded-lg text-sm font-medium hover:opacity-90 transition"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  Sign in to sync
+                </button>
+              )}
+            </div>
+            {user && (
+              <p className="text-xs text-green-500 mt-2 flex items-center gap-1">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Synced to cloud
+              </p>
+            )}
           </div>
         )}
 
@@ -967,6 +1055,9 @@ Give a brief, friendly response (1-2 sentences). If they want movies, suggest th
           <p className="text-xs text-zinc-600">Powered by Movies API • Built with React + Tailwind CSS</p>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
     </div>
   )
 }
