@@ -4,12 +4,15 @@ A Netflix-inspired movie discovery application built with React, TypeScript, and
 
 ## Features
 
-- **Movie Search**: Search for movies by title with real-time results
-- **Genre Filtering**: Filter movies by genre (Action, Comedy, Drama, etc.)
-- **Pagination**: Navigate through paginated search results
+- **Movie Search**: Search for movies by title with real-time debounced results
+- **Genre Filtering**: Filter movies by genre with scrollable pill navigation
+- **Favorites/Watchlist**: Save movies to favorites (persisted in local storage)
+- **Pagination**: Navigate through paginated results with smart page numbers
 - **Movie Details**: View detailed information including poster, rating, runtime, and overview
+- **Movie Trailers**: Watch trailers embedded directly or search on YouTube
+- **Advanced Filtering**: Filter by release year (decades) and content rating (G, PG, PG-13, R)
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
-- **Modern UI**: Dark theme with smooth animations and transitions
+- **Modern UI**: Glassmorphism navbar, dark theme, smooth hover effects
 
 ## Tech Stack
 
@@ -48,11 +51,9 @@ The overall user experience - from the smooth hover animations on movie cards to
 
 ### Future Improvements
 Given more time, I would add:
-- Movie trailers integration (YouTube API)
-- User favorites/watchlist (with local storage)
-- Advanced filtering (year, rating range)
 - Infinite scroll as an alternative to pagination
 - Unit and integration tests
+- User authentication for cloud-synced favorites
 
 ## API
 
