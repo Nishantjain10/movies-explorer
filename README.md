@@ -1,6 +1,6 @@
-# Movie Search App
+# Movie Explorer
 
-A modern, responsive movie search application built with React, TypeScript, and Tailwind CSS. Features a sleek UI inspired by popular streaming platforms like Netflix and Amazon Prime.
+A Netflix-inspired movie discovery application built with React, TypeScript, and Tailwind CSS. Features a sleek dark theme UI with smooth animations and an intuitive browsing experience.
 
 ## Features
 
