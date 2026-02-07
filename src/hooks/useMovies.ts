@@ -78,13 +78,18 @@ export function useMovies() {
         id: m.id,
         title: m.title
       }))
-      setMovies(movieSummaries)
-      setLoading(false)
       
       const movieIds = movieSummaries.map(m => m.id)
-      setLoadingDetails(new Set(movieIds))
+      
+      // For landing page, keep loading until we have all details
+      if (!isLandingPage) {
+        setMovies(movieSummaries)
+        setLoading(false)
+        setLoadingDetails(new Set(movieIds))
+      }
       
       const batchSize = 5
+      const allMoviesWithDetails: Movie[] = [...movieSummaries]
       
       for (let i = 0; i < movieIds.length; i += batchSize) {
         const batch = movieIds.slice(i, i + batchSize)
@@ -92,25 +97,38 @@ export function useMovies() {
           batch.map(id => fetchMovieDetails(authToken, id))
         )
         
-        setMovies(prev => prev.map(movie => {
-          const detail = details.find(d => d?.id === movie.id)
-          return detail || movie
-        }))
-        
-        setLoadingDetails(prev => {
-          const next = new Set(prev)
-          batch.forEach(id => next.delete(id))
-          return next
+        // Update the allMoviesWithDetails array
+        batch.forEach((id, idx) => {
+          const detail = details[idx]
+          if (detail) {
+            const movieIndex = allMoviesWithDetails.findIndex(m => m.id === id)
+            if (movieIndex !== -1) {
+              allMoviesWithDetails[movieIndex] = detail
+            }
+          }
         })
+        
+        // For non-landing pages, update progressively
+        if (!isLandingPage) {
+          setMovies(prev => prev.map(movie => {
+            const detail = details.find(d => d?.id === movie.id)
+            return detail || movie
+          }))
+          
+          setLoadingDetails(prev => {
+            const next = new Set(prev)
+            batch.forEach(id => next.delete(id))
+            return next
+          })
+        }
       }
       
-      // For landing page, filter to only show movies with posters (up to 15)
+      // For landing page, filter and show only movies with posters
       if (isLandingPage) {
-        setMovies(prev => {
-          const withPoster = prev.filter(m => m.posterUrl)
-          // Return only movies with posters, max 15
-          return withPoster.slice(0, 15)
-        })
+        const withPoster = allMoviesWithDetails.filter(m => m.posterUrl)
+        setMovies(withPoster.slice(0, 15))
+        setLoading(false)
+        setLoadingDetails(new Set())
       }
       
     } catch {
