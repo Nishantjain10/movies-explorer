@@ -93,21 +93,21 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
   }
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 transition-all duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-6 sm:p-8 transition-all duration-300 ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/80 backdrop-blur-md"
         onClick={handleClose}
       />
       
-      {/* Modal */}
-      <div className={`relative w-full max-w-[calc(100%-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto transform transition-all duration-300 ${isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
+      {/* Modal - constrained width on mobile */}
+      <div className={`relative w-full max-w-sm sm:max-w-md max-h-[80vh] overflow-y-auto transform transition-all duration-300 ${isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
         <div className="bg-gradient-to-b from-zinc-800/90 to-zinc-900/95 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/10 shadow-2xl shadow-black/50 overflow-hidden">
           {/* Decorative top gradient */}
           <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
           
           {/* Header */}
-          <div className="relative px-5 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6">
+          <div className="relative px-5 sm:px-8 pt-5 sm:pt-8 pb-3 sm:pb-6">
             <button
               onClick={handleClose}
               className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-zinc-400 hover:text-white transition-all duration-200 hover:rotate-90"
@@ -118,7 +118,7 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
             </button>
             
             {/* Icon */}
-            <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/25">
+            <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-4 rounded-lg sm:rounded-2xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/25">
               {mode === 'login' && (
                 <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
@@ -156,7 +156,7 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="px-5 sm:px-8 pb-4 sm:pb-6 space-y-3 sm:space-y-4">
+          <form onSubmit={handleSubmit} className="px-5 sm:px-8 pb-3 sm:pb-6 space-y-2.5 sm:space-y-4">
             {error && (
               <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm flex items-start gap-3 animate-in slide-in-from-top-2 duration-200">
                 <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -189,7 +189,7 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Your name"
-                      className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-red-500/50 focus:bg-white/10 transition-all duration-200"
+                      className="w-full pl-11 pr-4 py-3 sm:py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none focus:border-red-500/50 focus:bg-white/10 transition-all duration-200"
                       required
                     />
                   </div>
@@ -210,7 +210,7 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-red-500/50 focus:bg-white/10 transition-all duration-200"
+                    className="w-full pl-11 pr-4 py-3 sm:py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none focus:border-red-500/50 focus:bg-white/10 transition-all duration-200"
                     required
                   />
                 </div>
@@ -232,7 +232,7 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       minLength={8}
-                      className="w-full pl-12 pr-12 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-red-500/50 focus:bg-white/10 transition-all duration-200"
+                      className="w-full pl-11 pr-11 py-3 sm:py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm sm:text-base text-white placeholder-zinc-500 focus:outline-none focus:border-red-500/50 focus:bg-white/10 transition-all duration-200"
                       required
                     />
                     {/* Password visibility toggle */}
@@ -263,7 +263,7 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
             <button
               type="submit"
               disabled={loading}
-              className="relative w-full py-3.5 mt-2 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 disabled:from-red-500/50 disabled:to-orange-500/50 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
+              className="relative w-full py-3 sm:py-3.5 mt-1 sm:mt-2 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 disabled:from-red-500/50 disabled:to-orange-500/50 text-sm sm:text-base text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none shadow-lg shadow-red-500/25 hover:shadow-red-500/40"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -285,10 +285,10 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
           </form>
 
           {/* Footer Links */}
-          <div className="px-5 sm:px-8 pb-6 sm:pb-8 space-y-3 sm:space-y-4">
+          <div className="px-5 sm:px-8 pb-5 sm:pb-8 space-y-2.5 sm:space-y-4">
             {mode === 'login' && (
               <>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   <span className="text-xs text-zinc-500 uppercase tracking-wider">or</span>
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -297,15 +297,15 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
                 <button
                   type="button"
                   onClick={() => switchMode('magic')}
-                  className="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-medium rounded-xl transition-all duration-200 border border-white/10 hover:border-white/20 flex items-center justify-center gap-2"
+                  className="w-full py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 text-sm sm:text-base text-white font-medium rounded-xl transition-all duration-200 border border-white/10 hover:border-white/20 flex items-center justify-center gap-2"
                 >
-                  <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                   Sign in with Magic Link
                 </button>
                 
-                <div className="flex justify-between text-sm pt-2">
+                <div className="flex justify-between text-xs sm:text-sm pt-1.5 sm:pt-2">
                   <button
                     type="button"
                     onClick={() => switchMode('forgot')}
@@ -326,7 +326,7 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
 
             {mode === 'signup' && (
               <>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 sm:gap-4">
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                   <span className="text-xs text-zinc-500 uppercase tracking-wider">or</span>
                   <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -335,15 +335,15 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
                 <button
                   type="button"
                   onClick={() => switchMode('magic')}
-                  className="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-medium rounded-xl transition-all duration-200 border border-white/10 hover:border-white/20 flex items-center justify-center gap-2"
+                  className="w-full py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 text-sm sm:text-base text-white font-medium rounded-xl transition-all duration-200 border border-white/10 hover:border-white/20 flex items-center justify-center gap-2"
                 >
-                  <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
                   </svg>
                   Sign in with Magic Link
                 </button>
                 
-                <div className="flex justify-between text-sm pt-2">
+                <div className="flex justify-between text-xs sm:text-sm pt-1.5 sm:pt-2">
                   <button
                     type="button"
                     onClick={() => switchMode('forgot')}
