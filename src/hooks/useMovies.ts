@@ -54,7 +54,11 @@ export function useMovies() {
     setLoading(true)
     setError(null)
     try {
-      const params = new URLSearchParams({ page: String(page), limit: '15' })
+      // For page 1 with no filters, fetch extra movies to ensure we have enough with posters
+      const isLandingPage = page === 1 && !search && !genre
+      const fetchLimit = isLandingPage ? 30 : 15
+      
+      const params = new URLSearchParams({ page: String(page), limit: String(fetchLimit) })
       if (search) params.append('search', search)
       if (genre) params.append('genre', genre)
       
@@ -81,14 +85,12 @@ export function useMovies() {
       setLoadingDetails(new Set(movieIds))
       
       const batchSize = 5
-      const allDetails: (Movie | null)[] = []
       
       for (let i = 0; i < movieIds.length; i += batchSize) {
         const batch = movieIds.slice(i, i + batchSize)
         const details = await Promise.all(
           batch.map(id => fetchMovieDetails(authToken, id))
         )
-        allDetails.push(...details)
         
         setMovies(prev => prev.map(movie => {
           const detail = details.find(d => d?.id === movie.id)
@@ -102,12 +104,12 @@ export function useMovies() {
         })
       }
       
-      // On page 1 with no filters, prioritize movies with posters
-      if (page === 1 && !search && !genre) {
+      // For landing page, filter to only show movies with posters (up to 15)
+      if (isLandingPage) {
         setMovies(prev => {
           const withPoster = prev.filter(m => m.posterUrl)
-          const withoutPoster = prev.filter(m => !m.posterUrl)
-          return [...withPoster, ...withoutPoster]
+          // Return only movies with posters, max 15
+          return withPoster.slice(0, 15)
         })
       }
       
