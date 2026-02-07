@@ -9,7 +9,7 @@ A Netflix-inspired movie discovery application built with React, TypeScript, and
 - **Favorites/Watchlist**: Save movies to favorites (persisted in local storage)
 - **Pagination**: Navigate through paginated results with smart page numbers
 - **Movie Details**: View detailed information including poster, rating, runtime, and overview
-- **Movie Trailers**: Watch trailers embedded directly or search on YouTube
+- **Movie Trailers**: Watch trailers via YouTube search integration
 - **Advanced Filtering**: Filter by release year (decades) and content rating (G, PG, PG-13, R)
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 - **Modern UI**: Glassmorphism navbar, dark theme, smooth hover effects
