@@ -1,35 +1,31 @@
 # Movie Explorer
 
-A Netflix-inspired movie discovery application built with React, TypeScript, and Tailwind CSS. Features a sleek dark theme UI with smooth animations and an intuitive browsing experience.
+A modern movie discovery application built with React, TypeScript, and Tailwind CSS. Features a sleek dark theme UI with smooth animations and an intuitive browsing experience.
+
+![Movie Explorer Screenshot](https://github.com/user-attachments/assets/d653052c-5129-4f48-bdea-fbb20f8f37a8)
 
 ## Features
 
-- **Movie Search**: Search for movies by title with real-time debounced results
-- **Genre Filtering**: Filter movies by 18 genres with scrollable pill navigation
-- **Favorites/Watchlist**: Save movies to favorites (persisted in local storage)
-- **Pagination**: Navigate through paginated results with smart page numbers
-- **Movie Details**: View detailed information including poster, rating, runtime, and overview
-- **Movie Trailers**: Watch trailers via YouTube search integration
-- **AI Movie Assistant**: Smart chatbot that filters movies by genre, recommends titles, and helps discover content
-- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
-- **Modern UI**: Glassmorphism navbar, dark theme, smooth hover effects
+- **Smart Search**: Real-time movie search with debounced API calls for optimal performance
+- **Genre Filtering**: Browse 18+ genres with a horizontally scrollable pill navigation
+- **Favorites/Watchlist**: Save your favorite movies (persisted locally)
+- **Movie Details**: Rich modal view with poster, rating, runtime, overview, and trailer links
+- **YouTube Integration**: One-click access to movie trailers
+- **AI Movie Assistant**: Intelligent chatbot for personalized recommendations
+- **Responsive Design**: Fully optimized for desktop, tablet, and mobile
+- **Modern UI**: Glassmorphism effects, dark theme, smooth hover animations
 
 ## Tech Stack
 
-- **React 19** - Modern React with hooks and memoization
-- **TypeScript** - Type-safe development
-- **Vite** - Fast build tool and dev server
-- **Tailwind CSS v4** - Utility-first styling
-- **Gemini AI** - Powers the movie recommendation chatbot
+| Technology | Purpose |
+|------------|---------|
+| React 19 | UI framework with hooks & memoization |
+| TypeScript | Type-safe development |
+| Vite | Lightning-fast build tool |
+| Tailwind CSS v4 | Utility-first styling |
+| Gemini AI | Movie recommendation chatbot |
 
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+
-- npm or yarn
-
-### Installation
+## Quick Start
 
 ```bash
 # Clone the repository
@@ -41,53 +37,83 @@ npm install
 
 # Set up environment variables
 cp .env.example .env
-# Edit .env and add your Gemini API key
 
 # Start development server
+npm run dev
+```
+
+## Environment Setup
+
+Create a `.env` file in the root directory:
+
+```env
+VITE_GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+Get your free Gemini API key at [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+## AI Movie Assistant
+
+The chatbot (bottom-right corner) understands natural language:
+
+| Command | Action |
+|---------|--------|
+| "action", "comedy", "drama" | Filters by genre |
+| "best movies", "suggest something" | Shows recommendations |
+| "show all", "reset" | Clears all filters |
+| "I want something scary" | Filters to Horror |
+
+## Project Structure
+
+```
+movie-search-app/
+├── src/
+│   ├── App.tsx          # Main application component
+│   ├── index.css        # Global styles & Tailwind
+│   └── main.tsx         # React entry point
+├── .env.example         # Environment template
+├── index.html           # HTML entry
+└── package.json         # Dependencies
+```
+
+## Development
+
+```bash
+# Run development server
 npm run dev
 
 # Build for production
 npm run build
+
+# Preview production build
+npm run preview
 ```
 
-### Environment Variables
+## API Integration
 
-Create a `.env` file with:
-
-```
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-Get your Gemini API key at [Google AI Studio](https://makersuite.google.com/app/apikey)
-
-## AI Movie Assistant
-
-The chatbot in the bottom-right corner can:
-- **Filter by genre**: Say "action", "comedy", "drama", etc.
-- **Get recommendations**: Ask for "best movies" or "suggest something"
-- **Clear filters**: Say "show all" or "reset"
-- **Natural language**: "I want something scary" → filters to Horror
+This app integrates with a Movies REST API:
+- **Base URL**: `https://0kadddxyh3.execute-api.us-east-1.amazonaws.com`
+- **Authentication**: Bearer token (auto-fetched on startup)
+- **Endpoints**: `/auth/token`, `/movies`, `/movies/{id}`
 
 ## Highlights
 
-### What I Found Interesting
-The implementation of the genre filtering system with a horizontal scrollable pill-based UI provides an intuitive way for users to quickly filter content. Combined with the AI chatbot, it creates a powerful yet simple discovery experience.
+### What Makes This Project Special
+- Intuitive genre filtering with horizontal scroll navigation
+- AI-powered chatbot that understands natural language queries
+- Progressive loading with skeleton states for better UX
+- Robust error handling for broken images and API failures
 
-### What I'm Most Proud Of
-The overall user experience - from the smooth hover animations on movie cards to the elegant modal for movie details, and the smart AI assistant that understands natural language. The design balances aesthetics with functionality.
-
-### Future Improvements
-Given more time, I would add:
-- Infinite scroll as an alternative to pagination
-- Unit and integration tests
-- User authentication for cloud-synced favorites
-
-## API
-
-This app uses the Movies API for movie data:
-- Base URL: `https://0kadddxyh3.execute-api.us-east-1.amazonaws.com`
-- Authentication via Bearer token (auto-fetched)
+### Future Roadmap
+- [ ] Infinite scroll pagination
+- [ ] User authentication with cloud-synced favorites
+- [ ] Unit and integration tests
+- [ ] Movie recommendations based on watch history
 
 ## License
 
-MIT
+MIT License - feel free to use this project for learning or building upon it.
+
+---
+
+Built with ❤️ by [Nishant Jain](https://github.com/Nishantjain10)
