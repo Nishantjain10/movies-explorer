@@ -1,10 +1,28 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { authService, favoritesService, type User, type Favorite } from '../lib/appwrite'
 
+// Local storage keys
+const LOCAL_FAVORITES_KEY = 'movieFavorites'
+
+// Get local favorites
+const getLocalFavorites = (): string[] => {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_FAVORITES_KEY) || '[]')
+  } catch {
+    return []
+  }
+}
+
+// Save local favorites
+const saveLocalFavorites = (ids: string[]) => {
+  localStorage.setItem(LOCAL_FAVORITES_KEY, JSON.stringify(ids))
+}
+
 interface AuthContextType {
   user: User | null
   loading: boolean
   cloudFavorites: Favorite[]
+  localFavorites: string[]
   login: (email: string, password: string) => Promise<void>
   signup: (email: string, password: string, name: string) => Promise<void>
   logout: () => Promise<void>
@@ -13,6 +31,10 @@ interface AuthContextType {
   addToCloudFavorites: (movieId: string, title: string, poster?: string, rating?: number) => Promise<void>
   removeFromCloudFavorites: (movieId: string) => Promise<void>
   isMovieInCloudFavorites: (movieId: string) => boolean
+  addToLocalFavorites: (movieId: string) => void
+  removeFromLocalFavorites: (movieId: string) => void
+  isInFavorites: (movieId: string) => boolean
+  syncLocalToCloud: (movieData: Map<string, { title: string; poster?: string; rating?: number }>) => Promise<void>
   refreshFavorites: () => Promise<void>
 }
 
@@ -22,6 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [cloudFavorites, setCloudFavorites] = useState<Favorite[]>([])
+  const [localFavorites, setLocalFavorites] = useState<string[]>(getLocalFavorites)
 
   // Check for existing session on mount
   useEffect(() => {
@@ -51,7 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Clean up URL
           window.history.replaceState({}, '', window.location.pathname)
         })
-        .catch(console.error)
+        .catch(() => {
+          // Silently handle magic link errors
+        })
     }
   }, [])
 
@@ -68,8 +93,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchFavorites = async () => {
     if (!user) return
-    const favorites = await favoritesService.getFavorites(user.$id)
-    setCloudFavorites(favorites)
+    try {
+      const favorites = await favoritesService.getFavorites(user.$id)
+      setCloudFavorites(favorites)
+    } catch {
+      // Silently handle fetch errors
+      setCloudFavorites([])
+    }
   }
 
   const login = async (email: string, password: string) => {
@@ -103,9 +133,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     rating?: number
   ) => {
     if (!user) return
-    const favorite = await favoritesService.addFavorite(user.$id, movieId, title, poster, rating)
-    if (favorite) {
-      setCloudFavorites(prev => [favorite, ...prev])
+    try {
+      const favorite = await favoritesService.addFavorite(user.$id, movieId, title, poster, rating)
+      if (favorite) {
+        setCloudFavorites(prev => [favorite, ...prev])
+      }
+    } catch {
+      // Silently handle add errors
     }
   }, [user])
 
@@ -113,9 +147,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) return
     const favorite = cloudFavorites.find(f => f.movieId === movieId)
     if (favorite) {
-      const success = await favoritesService.removeFavorite(favorite.$id)
-      if (success) {
-        setCloudFavorites(prev => prev.filter(f => f.$id !== favorite.$id))
+      try {
+        const success = await favoritesService.removeFavorite(favorite.$id)
+        if (success) {
+          setCloudFavorites(prev => prev.filter(f => f.$id !== favorite.$id))
+        }
+      } catch {
+        // Silently handle remove errors
       }
     }
   }, [user, cloudFavorites])
@@ -123,6 +161,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isMovieInCloudFavorites = useCallback((movieId: string): boolean => {
     return cloudFavorites.some(f => f.movieId === movieId)
   }, [cloudFavorites])
+
+  // Local favorites management
+  const addToLocalFavorites = useCallback((movieId: string) => {
+    setLocalFavorites(prev => {
+      if (prev.includes(movieId)) return prev
+      const newFavs = [...prev, movieId]
+      saveLocalFavorites(newFavs)
+      return newFavs
+    })
+  }, [])
+
+  const removeFromLocalFavorites = useCallback((movieId: string) => {
+    setLocalFavorites(prev => {
+      const newFavs = prev.filter(id => id !== movieId)
+      saveLocalFavorites(newFavs)
+      return newFavs
+    })
+  }, [])
+
+  // Check if movie is in favorites (cloud if logged in, local otherwise)
+  const isInFavorites = useCallback((movieId: string): boolean => {
+    if (user) {
+      return isMovieInCloudFavorites(movieId)
+    }
+    return localFavorites.includes(movieId)
+  }, [user, localFavorites, isMovieInCloudFavorites])
+
+  // Sync local favorites to cloud when user logs in
+  const syncLocalToCloud = useCallback(async (
+    movieData: Map<string, { title: string; poster?: string; rating?: number }>
+  ) => {
+    if (!user) {
+      return
+    }
+    
+    // Always clear local favorites first - they either get synced or are already in cloud
+    const localToSync = [...localFavorites]
+    setLocalFavorites([])
+    saveLocalFavorites([])
+    
+    if (localToSync.length === 0) return
+    
+    // Get IDs that are in local but not in cloud
+    const cloudIds = new Set(cloudFavorites.map(f => f.movieId))
+    const toSync = localToSync.filter(id => !cloudIds.has(id))
+    
+    // Sync each to cloud
+    for (const movieId of toSync) {
+      const data = movieData.get(movieId)
+      if (data) {
+        await addToCloudFavorites(movieId, data.title, data.poster, data.rating)
+      }
+    }
+  }, [user, localFavorites, cloudFavorites, addToCloudFavorites])
 
   const refreshFavorites = async () => {
     await fetchFavorites()
@@ -133,6 +225,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       cloudFavorites,
+      localFavorites,
       login,
       signup,
       logout,
@@ -141,6 +234,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       addToCloudFavorites,
       removeFromCloudFavorites,
       isMovieInCloudFavorites,
+      addToLocalFavorites,
+      removeFromLocalFavorites,
+      isInFavorites,
+      syncLocalToCloud,
       refreshFavorites
     }}>
       {children}

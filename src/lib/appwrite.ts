@@ -30,6 +30,21 @@ export interface Favorite {
   createdAt: string
 }
 
+// Check if we have a stored session indicator
+const SESSION_KEY = 'appwrite_session_active'
+
+const hasStoredSession = (): boolean => {
+  return localStorage.getItem(SESSION_KEY) === 'true'
+}
+
+const setStoredSession = (active: boolean): void => {
+  if (active) {
+    localStorage.setItem(SESSION_KEY, 'true')
+  } else {
+    localStorage.removeItem(SESSION_KEY)
+  }
+}
+
 // Auth Functions
 export const authService = {
   // Create new account
@@ -47,6 +62,7 @@ export const authService = {
   // Login with email and password
   async login(email: string, password: string): Promise<void> {
     await account.createEmailPasswordSession(email, password)
+    setStoredSession(true)
   },
 
   // Send magic link
@@ -58,6 +74,7 @@ export const authService = {
   // Verify magic link session
   async verifyMagicLink(userId: string, secret: string): Promise<void> {
     await account.createSession(userId, secret)
+    setStoredSession(true)
   },
 
   // Send password recovery email
@@ -73,11 +90,26 @@ export const authService = {
 
   // Logout
   async logout(): Promise<void> {
-    await account.deleteSession('current')
+    try {
+      await account.deleteSession('current')
+    } catch (error: unknown) {
+      // Ignore errors during logout (session might already be invalid)
+      const appwriteError = error as { code?: number }
+      if (appwriteError?.code !== 401 && appwriteError?.code !== 404) {
+        console.error('Logout error:', error)
+      }
+    } finally {
+      setStoredSession(false)
+    }
   },
 
-  // Get current user
+  // Get current user (returns null if not logged in)
   async getCurrentUser(): Promise<User | null> {
+    // Skip API call if we know there's no session
+    if (!hasStoredSession()) {
+      return null
+    }
+    
     try {
       const user = await account.get()
       return {
@@ -85,7 +117,15 @@ export const authService = {
         email: user.email,
         name: user.name
       }
-    } catch {
+    } catch (error: unknown) {
+      // Session is invalid or expired - clear the stored indicator
+      setStoredSession(false)
+      
+      // 401 is expected when not logged in - don't log it
+      const appwriteError = error as { code?: number }
+      if (appwriteError?.code !== 401) {
+        console.error('Auth error:', error)
+      }
       return null
     }
   }

@@ -4,6 +4,12 @@
   box-sizing: border-box;
 }
 
+/* Ensure buttons and links have pointer cursor */
+button:not(:disabled),
+a {
+  cursor: pointer;
+}
+
 html {
   scroll-behavior: smooth;
 }
