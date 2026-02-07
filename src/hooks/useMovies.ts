@@ -1,7 +1,39 @@
-import { useState, useCallback, useMemo, useEffect } from 'react'
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { API_BASE_URL } from '../constants'
 import type { Movie, MovieSummary, MoviesResponse } from '../types'
 import { movieCache } from '../utils'
+
+// Quick check for valid poster URLs
+const isPosterUrlLikelyValid = (url?: string): boolean => {
+  if (!url) return false
+  if (url.includes('placeholder')) return false
+  if (url.includes('no-image')) return false
+  if (url.includes('default')) return false
+  return url.startsWith('http') && (url.includes('.jpg') || url.includes('.png') || url.includes('.webp'))
+}
+
+// Cache for validated poster URLs
+const posterValidationCache = new Map<string, boolean>()
+
+// Actually validate if a poster image loads successfully
+const validatePosterImage = (url: string): Promise<boolean> => {
+  if (posterValidationCache.has(url)) {
+    return Promise.resolve(posterValidationCache.get(url)!)
+  }
+  
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      posterValidationCache.set(url, true)
+      resolve(true)
+    }
+    img.onerror = () => {
+      posterValidationCache.set(url, false)
+      resolve(false)
+    }
+    img.src = url
+  })
+}
 
 export function useMovies() {
   const [token, setToken] = useState<string | null>(null)
@@ -15,8 +47,11 @@ export function useMovies() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalResults, setTotalResults] = useState(0)
   const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
+  
+  // Track if initial fetch has happened
+  const hasFetched = useRef(false)
 
-  // Fetch auth token
+  // Fetch auth token - memoized
   const fetchToken = useCallback(async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/auth/token`)
@@ -123,10 +158,34 @@ export function useMovies() {
         }
       }
       
-      // For landing page, filter and show only movies with posters
+      // For landing page, validate posters actually load and filter
       if (isLandingPage) {
-        const withPoster = allMoviesWithDetails.filter(m => m.posterUrl)
-        setMovies(withPoster.slice(0, 15))
+        // First quick filter for valid-looking URLs
+        const candidates = allMoviesWithDetails.filter(m => 
+          m.posterUrl && isPosterUrlLikelyValid(m.posterUrl)
+        )
+        
+        // Validate posters actually load (in parallel batches)
+        const validatedMovies: Movie[] = []
+        const validationBatchSize = 10
+        
+        for (let i = 0; i < candidates.length && validatedMovies.length < 15; i += validationBatchSize) {
+          const batch = candidates.slice(i, i + validationBatchSize)
+          const validations = await Promise.all(
+            batch.map(async (movie) => ({
+              movie,
+              valid: await validatePosterImage(movie.posterUrl!)
+            }))
+          )
+          
+          for (const { movie, valid } of validations) {
+            if (valid && validatedMovies.length < 15) {
+              validatedMovies.push(movie)
+            }
+          }
+        }
+        
+        setMovies(validatedMovies)
         setLoading(false)
         setLoadingDetails(new Set())
       }
@@ -166,21 +225,28 @@ export function useMovies() {
     return pages
   }, [currentPage, totalPages])
 
-  // Initial fetch
+  // Initial fetch - runs once
   useEffect(() => {
+    if (hasFetched.current) return
+    hasFetched.current = true
+    
     fetchToken().then(t => {
       if (t) fetchMovies(t, 1, '', '')
     })
   }, [fetchToken, fetchMovies])
 
-  // Search/genre effect
+  // Search/genre effect - debounced
   useEffect(() => {
-    if (!token) return
+    if (!token || !hasFetched.current) return
+    
+    // Skip if this is effectively the initial state
+    if (searchQuery === '' && selectedGenre === '' && currentPage === 1) return
+    
     const timeoutId = setTimeout(() => {
       fetchMovies(token, 1, searchQuery, selectedGenre)
     }, 300)
     return () => clearTimeout(timeoutId)
-  }, [searchQuery, selectedGenre, token, fetchMovies])
+  }, [searchQuery, selectedGenre, token, fetchMovies, currentPage])
 
   return {
     token,

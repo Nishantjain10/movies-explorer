@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 import { authService, favoritesService, type User, type Favorite } from '../lib/appwrite'
 
 // Local storage keys
@@ -102,29 +102,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     await authService.login(email, password)
     await checkSession()
-  }
+  }, [])
 
-  const signup = async (email: string, password: string, name: string) => {
+  const signup = useCallback(async (email: string, password: string, name: string) => {
     await authService.createAccount(email, password, name)
     await checkSession()
-  }
+  }, [])
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     await authService.logout()
     setUser(null)
     setCloudFavorites([])
-  }
+  }, [])
 
-  const sendMagicLink = async (email: string) => {
+  const sendMagicLink = useCallback(async (email: string) => {
     await authService.sendMagicLink(email)
-  }
+  }, [])
 
-  const forgotPassword = async (email: string) => {
+  const forgotPassword = useCallback(async (email: string) => {
     await authService.forgotPassword(email)
-  }
+  }, [])
 
   const addToCloudFavorites = useCallback(async (
     movieId: string,
@@ -216,30 +216,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [user, localFavorites, cloudFavorites, addToCloudFavorites])
 
-  const refreshFavorites = async () => {
+  const refreshFavorites = useCallback(async () => {
     await fetchFavorites()
-  }
+  }, [])
+
+  // Memoize context value to prevent unnecessary re-renders
+  const contextValue = useMemo(() => ({
+    user,
+    loading,
+    cloudFavorites,
+    localFavorites,
+    login,
+    signup,
+    logout,
+    sendMagicLink,
+    forgotPassword,
+    addToCloudFavorites,
+    removeFromCloudFavorites,
+    isMovieInCloudFavorites,
+    addToLocalFavorites,
+    removeFromLocalFavorites,
+    isInFavorites,
+    syncLocalToCloud,
+    refreshFavorites
+  }), [
+    user,
+    loading,
+    cloudFavorites,
+    localFavorites,
+    login,
+    signup,
+    logout,
+    sendMagicLink,
+    forgotPassword,
+    addToCloudFavorites,
+    removeFromCloudFavorites,
+    isMovieInCloudFavorites,
+    addToLocalFavorites,
+    removeFromLocalFavorites,
+    isInFavorites,
+    syncLocalToCloud,
+    refreshFavorites
+  ])
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      loading,
-      cloudFavorites,
-      localFavorites,
-      login,
-      signup,
-      logout,
-      sendMagicLink,
-      forgotPassword,
-      addToCloudFavorites,
-      removeFromCloudFavorites,
-      isMovieInCloudFavorites,
-      addToLocalFavorites,
-      removeFromLocalFavorites,
-      isInFavorites,
-      syncLocalToCloud,
-      refreshFavorites
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   )
