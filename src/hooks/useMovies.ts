@@ -15,19 +15,27 @@ const isPosterUrlLikelyValid = (url?: string): boolean => {
 // Cache for validated poster URLs
 const posterValidationCache = new Map<string, boolean>()
 
-// Actually validate if a poster image loads successfully
-const validatePosterImage = (url: string): Promise<boolean> => {
+// Validate poster image with timeout for faster loading
+const validatePosterImage = (url: string, timeoutMs = 2000): Promise<boolean> => {
   if (posterValidationCache.has(url)) {
     return Promise.resolve(posterValidationCache.get(url)!)
   }
   
   return new Promise((resolve) => {
     const img = new Image()
+    const timeout = setTimeout(() => {
+      // Timeout - assume valid (will show placeholder if fails later)
+      posterValidationCache.set(url, true)
+      resolve(true)
+    }, timeoutMs)
+    
     img.onload = () => {
+      clearTimeout(timeout)
       posterValidationCache.set(url, true)
       resolve(true)
     }
     img.onerror = () => {
+      clearTimeout(timeout)
       posterValidationCache.set(url, false)
       resolve(false)
     }
@@ -50,6 +58,9 @@ export function useMovies() {
   
   // Track if initial fetch has happened
   const hasFetched = useRef(false)
+  // Track previous values for change detection
+  const prevGenre = useRef(selectedGenre)
+  const prevSearch = useRef(searchQuery)
 
   // Fetch auth token - memoized
   const fetchToken = useCallback(async () => {
@@ -165,25 +176,19 @@ export function useMovies() {
           m.posterUrl && isPosterUrlLikelyValid(m.posterUrl)
         )
         
-        // Validate posters actually load (in parallel batches)
-        const validatedMovies: Movie[] = []
-        const validationBatchSize = 10
+        // Validate ALL posters in parallel with timeout for speed
+        const validations = await Promise.all(
+          candidates.map(async (movie) => ({
+            movie,
+            valid: await validatePosterImage(movie.posterUrl!, 1500) // 1.5s timeout
+          }))
+        )
         
-        for (let i = 0; i < candidates.length && validatedMovies.length < 15; i += validationBatchSize) {
-          const batch = candidates.slice(i, i + validationBatchSize)
-          const validations = await Promise.all(
-            batch.map(async (movie) => ({
-              movie,
-              valid: await validatePosterImage(movie.posterUrl!)
-            }))
-          )
-          
-          for (const { movie, valid } of validations) {
-            if (valid && validatedMovies.length < 15) {
-              validatedMovies.push(movie)
-            }
-          }
-        }
+        // Filter to valid posters and take first 15
+        const validatedMovies = validations
+          .filter(v => v.valid)
+          .map(v => v.movie)
+          .slice(0, 15)
         
         setMovies(validatedMovies)
         setLoading(false)
@@ -239,14 +244,22 @@ export function useMovies() {
   useEffect(() => {
     if (!token || !hasFetched.current) return
     
-    // Skip if this is effectively the initial state
-    if (searchQuery === '' && selectedGenre === '' && currentPage === 1) return
+    // Check if search or genre actually changed
+    const genreChanged = prevGenre.current !== selectedGenre
+    const searchChanged = prevSearch.current !== searchQuery
+    
+    // Update refs
+    prevGenre.current = selectedGenre
+    prevSearch.current = searchQuery
+    
+    // Only fetch if something changed
+    if (!genreChanged && !searchChanged) return
     
     const timeoutId = setTimeout(() => {
       fetchMovies(token, 1, searchQuery, selectedGenre)
     }, 300)
     return () => clearTimeout(timeoutId)
-  }, [searchQuery, selectedGenre, token, fetchMovies, currentPage])
+  }, [searchQuery, selectedGenre, token, fetchMovies])
 
   return {
     token,
