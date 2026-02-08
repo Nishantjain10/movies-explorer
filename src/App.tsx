@@ -82,6 +82,9 @@ function App() {
     [isOnFavoritesPage, movies, favorites]
   )
 
+  // Check if this is the landing page (for special loading screen)
+  const isLandingPage = !searchQuery && !selectedGenre && currentPage === 1 && !isOnFavoritesPage
+
   // Handlers
   const handleGenreChange = (genre: string) => {
     setSelectedGenre(genre)
@@ -148,7 +151,7 @@ function App() {
         )}
 
         {/* Loading State */}
-        {loading && !error && <LoadingSkeleton />}
+        {loading && !error && <LoadingSkeleton isLandingPage={isLandingPage} />}
 
         {/* Movies Grid */}
         {!loading && !error && displayMovies.length > 0 && (
