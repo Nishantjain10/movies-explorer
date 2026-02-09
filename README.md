@@ -14,14 +14,18 @@ A modern movie discovery application built with React, TypeScript, and Tailwind 
 
 ### What I Found Especially Interesting
 
-The **poster validation system** was a particularly interesting challenge. The API returns movie data with poster URLs, but many of these URLs return 404 errors. To provide a polished user experience on the landing page, I implemented a multi-stage validation system:
+The **landing page poster validation system** was a particularly interesting challenge. When a user lands on the app for the first time (page 1, no filters, no search), I wanted to ensure they see a polished grid of movies with working poster images - not broken image placeholders. The API returns poster URLs, but many return 404 errors.
 
-1. **Quick URL pattern check** - Filter out obviously invalid URLs (placeholders, etc.)
-2. **Parallel image preloading** - Use JavaScript `Image` objects to test if posters actually load
-3. **Timeout mechanism** - 1.5 second timeout to prevent slow images from blocking the UI
-4. **Caching layer** - Store validation results to avoid re-checking the same URLs
+**Solution for first-time user experience:**
 
-This ensures users only see movies with working poster images on the first page, creating a much more professional first impression.
+1. **Fetch extra movies** - Request 30 movies instead of 15 to have a larger pool
+2. **Quick URL pattern check** - Filter out obviously invalid URLs (placeholders, etc.)
+3. **Parallel image preloading** - Use JavaScript `Image` objects to test if posters actually load
+4. **Timeout mechanism** - 1.5 second timeout per image to prevent slow images from blocking the UI
+5. **Caching layer** - Store validation results to avoid re-checking the same URLs
+6. **Display filtered results** - Show only the first 15 movies with confirmed working posters
+
+This validation only runs on the **landing page** (first page, "All" genre, no search). For subsequent pages, genre filtering, or search results, the regular skeleton loading is used for faster response times. This approach balances first-impression polish with overall performance.
 
 ### What I'm Most Proud Of
 
