@@ -6,7 +6,7 @@ A modern movie discovery application built with React, TypeScript, and Tailwind 
 
 ## Live Demo
 
-**Deployed Application**: [https://movies-explorer-nishant.vercel.app](https://movies-explorer-nishant.vercel.app)
+**Deployed Application**: [https://movies-explorer-nu.vercel.app/](https://movies-explorer-nu.vercel.app/)
 
 ---
 
@@ -32,7 +32,7 @@ This validation only runs on the **landing page** (first page, "All" genre, no s
 I'm most proud of the **overall user experience and polish** of the application:
 
 - **Progressive loading with rotating messages** - Instead of a boring spinner, the landing page shows engaging messages like "Discovering amazing movies for you..." while loading
-- **Seamless authentication flow** - Users can browse as guests, save favorites locally, then sync them to the cloud when they sign up
+- **Authentication flow powered by Appwrite** - Users can browse as guests, save favorites locally, then sync them to the cloud when they sign up
 - **AI chatbot integration** - Natural language understanding for movie recommendations with genre auto-detection
 - **Responsive design** - Carefully crafted UI that works beautifully from mobile to desktop
 - **Modular architecture** - Clean separation of concerns with custom hooks, components, and utilities
@@ -240,21 +240,6 @@ npx tsc --noEmit
 
 ---
 
-## Requirements Checklist
-
-| Requirement | Status | Implementation |
-|-------------|--------|----------------|
-| Search for movies with paginated results | ✅ | Debounced search with 15 results per page |
-| Filter search results by genre | ✅ | 18+ genres with horizontal scroll pills |
-| Navigate through pages | ✅ | Previous/Next buttons + page numbers |
-| See total count of results | ✅ | Displayed in navbar and pagination |
-| See movie poster | ✅ | With validation and themed fallback |
-| See movie duration | ✅ | Parsed from ISO 8601 format |
-| See movie rating | ✅ | Content rating badge display |
-| See movie summary | ⚠️ | API limitation - field is undefined |
-
----
-
 ## Third-Party Libraries
 
 | Library | Purpose |
@@ -266,12 +251,6 @@ npx tsc --noEmit
 | `tailwindcss` & `@tailwindcss/vite` | Utility-first CSS framework |
 | `typescript` | Type safety and better DX |
 | `vite` | Fast development server and build tool |
-
----
-
-## License
-
-MIT License - feel free to use this project for learning or building upon it.
 
 ---
 
