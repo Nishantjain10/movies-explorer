@@ -6,6 +6,9 @@ PROGRESS.md
 .env.local
 .env.*.local
 
+# Scripts with secrets
+scripts/
+
 # Logs
 logs
 *.log
