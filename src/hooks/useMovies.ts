@@ -100,11 +100,10 @@ export function useMovies() {
     setLoading(true)
     setError(null)
     try {
-      // For page 1 with no filters, fetch extra movies to ensure we have enough with posters
       const isLandingPage = page === 1 && !search && !genre
-      const fetchLimit = isLandingPage ? 30 : 15
       
-      const params = new URLSearchParams({ page: String(page), limit: String(fetchLimit) })
+      // Always use limit=15 for consistent pagination
+      const params = new URLSearchParams({ page: String(page), limit: '15' })
       if (search) params.append('search', search)
       if (genre) params.append('genre', genre)
       
@@ -122,7 +121,19 @@ export function useMovies() {
       setCurrentPage(page)
       setImageErrors(new Set())
       
-      const movieSummaries: Movie[] = (data.data || []).map((m: MovieSummary) => ({
+      // For landing page, also fetch page 2 to have more movies for poster validation
+      let allSummaries = data.data || []
+      if (isLandingPage && (data.totalPages || 1) > 1) {
+        const page2Res = await fetch(`${API_BASE_URL}/movies?page=2&limit=15`, {
+          headers: { Authorization: `Bearer ${authToken}` }
+        })
+        if (page2Res.ok) {
+          const page2Data = await page2Res.json()
+          allSummaries = [...allSummaries, ...(page2Data.data || [])]
+        }
+      }
+      
+      const movieSummaries: Movie[] = allSummaries.map((m: MovieSummary) => ({
         id: m.id,
         title: m.title
       }))
