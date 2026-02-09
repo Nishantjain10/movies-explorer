@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react'
 import { API_BASE_URL } from '../constants'
-import type { Movie, MovieSummary, MoviesResponse } from '../types'
+import type { Movie, MovieSummary } from '../types'
 import { movieCache } from '../utils'
 
 // Quick check for valid poster URLs
@@ -113,10 +113,12 @@ export function useMovies() {
       })
       if (!res.ok) throw new Error()
       
-      const data: MoviesResponse = await res.json()
+      const data = await res.json()
       
-      setTotalPages(data.totalPages || 1)
-      setTotalResults(data.total || 0)
+      setTotalPages(data.totalPages || data.pages || 1)
+      // Handle different possible field names for total count
+      const totalCount = data.total || data.totalResults || data.totalCount || data.count || (data.data?.length * (data.totalPages || 1)) || 0
+      setTotalResults(totalCount)
       setCurrentPage(page)
       setImageErrors(new Set())
       
