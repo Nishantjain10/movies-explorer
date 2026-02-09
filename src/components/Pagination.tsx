@@ -3,6 +3,7 @@ import { memo } from 'react'
 interface PaginationProps {
   currentPage: number
   totalPages: number
+  totalResults: number
   pageNumbers: number[]
   onPageChange: (page: number) => void
 }
@@ -10,6 +11,7 @@ interface PaginationProps {
 const Pagination = memo(({
   currentPage,
   totalPages,
+  totalResults,
   pageNumbers,
   onPageChange
 }: PaginationProps) => {
@@ -75,8 +77,8 @@ const Pagination = memo(({
         </button>
       </div>
       
-      <p className="text-center text-zinc-600 text-xs mt-3">
-        Page {currentPage} of {totalPages}
+      <p className="text-center text-zinc-500 text-xs sm:text-sm mt-3">
+        Page {currentPage} of {totalPages} <span className="text-zinc-600 mx-1">•</span> <span className="text-white font-medium">{totalResults.toLocaleString()}</span> total movies
       </p>
     </div>
   )

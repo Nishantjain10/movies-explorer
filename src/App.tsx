@@ -176,6 +176,7 @@ function App() {
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
+            totalResults={totalResults}
             pageNumbers={pageNumbers}
             onPageChange={handlePageChange}
           />
