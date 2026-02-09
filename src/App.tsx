@@ -115,8 +115,6 @@ function App() {
           cloudFavorites={cloudFavorites}
           onLogout={logout}
           onSignIn={handleSignIn}
-          totalResults={totalResults}
-          loading={loading}
         />
         <GenrePills
           selectedGenre={selectedGenre}

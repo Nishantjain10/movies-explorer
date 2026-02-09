@@ -325,41 +325,15 @@ export const AuthModal = memo(function AuthModal({ isOpen, onClose, initialMode 
             )}
 
             {mode === 'signup' && (
-              <>
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                  <span className="text-xs text-zinc-500 uppercase tracking-wider">or</span>
-                  <div className="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                </div>
-                
+              <div className="text-center text-xs sm:text-sm pt-1.5 sm:pt-2">
                 <button
                   type="button"
-                  onClick={() => switchMode('magic')}
-                  className="w-full py-2.5 sm:py-3 bg-white/5 hover:bg-white/10 text-sm sm:text-base text-white font-medium rounded-xl transition-all duration-200 border border-white/10 hover:border-white/20 flex items-center justify-center gap-2"
+                  onClick={() => switchMode('login')}
+                  className="text-red-400 hover:text-red-300 transition-colors font-medium"
                 >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
-                  </svg>
-                  Sign in with Magic Link
+                  Already have an account? →
                 </button>
-                
-                <div className="flex justify-between text-xs sm:text-sm pt-1.5 sm:pt-2">
-                  <button
-                    type="button"
-                    onClick={() => switchMode('forgot')}
-                    className="text-zinc-400 hover:text-white transition-colors"
-                  >
-                    Forgot password?
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => switchMode('login')}
-                    className="text-red-400 hover:text-red-300 transition-colors font-medium"
-                  >
-                    Already have an account? →
-                  </button>
-                </div>
-              </>
+              </div>
             )}
 
             {(mode === 'forgot' || mode === 'magic') && (

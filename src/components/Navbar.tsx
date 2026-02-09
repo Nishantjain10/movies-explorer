@@ -13,8 +13,6 @@ interface NavbarProps {
   cloudFavorites: Favorite[]
   onLogout: () => void
   onSignIn: () => void
-  totalResults: number
-  loading: boolean
 }
 
 const Navbar = memo(({
@@ -26,9 +24,7 @@ const Navbar = memo(({
   authLoading,
   cloudFavorites,
   onLogout,
-  onSignIn,
-  totalResults,
-  loading
+  onSignIn
 }: NavbarProps) => {
   const [userMenuOpen, setUserMenuOpen] = useState(false)
 
@@ -136,11 +132,6 @@ const Navbar = memo(({
           )
         )}
 
-        {!loading && totalResults > 0 && !isOnFavoritesPage && (
-          <div className="hidden lg:block text-sm text-zinc-400 pl-2 border-l border-white/10">
-            <span className="text-white font-medium">{totalResults.toLocaleString()}</span> movies
-          </div>
-        )}
       </div>
     </div>
   )
